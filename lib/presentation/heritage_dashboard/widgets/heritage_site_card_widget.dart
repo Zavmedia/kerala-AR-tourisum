@@ -277,6 +277,31 @@ class HeritageSiteCardWidget extends StatelessWidget {
               ],
             ),
             SizedBox(height: 2.h),
+            // Business features row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildQuickActionButton(
+                  context,
+                  'confirmation_number',
+                  'Book Tickets',
+                  () => _bookTickets(context),
+                ),
+                _buildQuickActionButton(
+                  context,
+                  'feedback',
+                  'Leave Feedback',
+                  () => _leaveFeedback(context),
+                ),
+                _buildQuickActionButton(
+                  context,
+                  'explore',
+                  'Discover More',
+                  () => _discoverMore(context),
+                ),
+              ],
+            ),
+            SizedBox(height: 2.h),
           ],
         ),
       ),
@@ -321,5 +346,43 @@ class HeritageSiteCardWidget extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _bookTickets(BuildContext context) {
+    Navigator.pop(context);
+    
+    // Create sample ticket for quick checkout
+    final ticket = TicketType(
+      id: '${site['id']}_ticket',
+      name: '${site['name']} Entry Ticket',
+      price: 50.0, // Sample price
+      description: 'Entry ticket for ${site['name']}',
+      quantity: 1,
+      maxQuantity: 10,
+      isAvailable: true,
+    );
+
+    BusinessNavigationHelper.navigateToCheckout(
+      context,
+      tickets: [ticket],
+      merchandise: [],
+      heritageSiteId: site['id'].toString(),
+    );
+  }
+
+  void _leaveFeedback(BuildContext context) {
+    Navigator.pop(context);
+    
+    BusinessNavigationHelper.navigateToFeedback(
+      context,
+      heritageSiteId: site['id'].toString(),
+      heritageSiteName: site['name'] as String,
+    );
+  }
+
+  void _discoverMore(BuildContext context) {
+    Navigator.pop(context);
+    
+    BusinessNavigationHelper.navigateToDiscover(context);
   }
 }

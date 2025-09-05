@@ -10,6 +10,11 @@ import 'advanced_search_service.dart';
 import 'social_service.dart';
 import 'gamification_service.dart';
 import 'offline_sync_service.dart';
+import 'embedding_service.dart';
+import 'logging_service.dart';
+import 'payment_service.dart';
+import 'partnership_service.dart';
+import 'feedback_service.dart';
 
 class ServiceManager {
   static final ServiceManager _instance = ServiceManager._internal();
@@ -30,6 +35,13 @@ class ServiceManager {
   late final SocialService _socialService;
   late final GamificationService _gamificationService;
   late final OfflineSyncService _offlineSyncService;
+  late final EmbeddingService _embeddingService;
+  late final LoggingService _loggingService;
+  
+  // Business services
+  late final PaymentService _paymentService;
+  late final PartnershipService _partnershipService;
+  late final FeedbackService _feedbackService;
 
   // Service getters
   ApiService get apiService => _apiService;
@@ -43,6 +55,13 @@ class ServiceManager {
   SocialService get socialService => _socialService;
   GamificationService get gamificationService => _gamificationService;
   OfflineSyncService get offlineSyncService => _offlineSyncService;
+  EmbeddingService get embeddingService => _embeddingService;
+  LoggingService get loggingService => _loggingService;
+  
+  // Business service getters
+  PaymentService get paymentService => _paymentService;
+  PartnershipService get partnershipService => _partnershipService;
+  FeedbackService get feedbackService => _feedbackService;
 
   Future<void> initialize() async {
     try {
@@ -94,15 +113,33 @@ class ServiceManager {
       _offlineSyncService = OfflineSyncService();
       await _offlineSyncService.initialize(api: _apiService, db: _databaseService);
 
+      print('🧠 Initializing Embedding Service (v1.5)...');
+      _embeddingService = EmbeddingService();
+      await _embeddingService.initialize();
+
+      print('🪵 Initializing Logging Service...');
+      _loggingService = LoggingService();
+      await _loggingService.initialize();
+
+      // Initialize business services
+      print('💳 Initializing Payment Service...');
+      _paymentService = PaymentService();
+      await _paymentService.initialize();
+
+      print('🤝 Initializing Partnership Service...');
+      _partnershipService = PartnershipService();
+      await _partnershipService.initialize();
+
+      print('📝 Initializing Feedback Service...');
+      _feedbackService = FeedbackService();
+      await _feedbackService.initialize();
+
       // Prepare offline AR model assets bundled with app
       await _offlineSyncService.prepareOfflineARAssets([
         {'id': 'fort_kochi', 'assetPath': 'assets/models/fort_kochi.glb'},
         {'id': 'mattancherry_palace', 'assetPath': 'assets/models/mattancherry_palace.glb'},
         {'id': 'jewish_synagogue', 'assetPath': 'assets/models/jewish_synagogue.glb'},
       ]);
-
-      // Kick off an initial background sync (best-effort)
-      // unawaited(_offlineSyncService.syncContent()); // This line was removed as per the new_code, as it's not in the new_code.
 
       print('✅ All services initialized successfully!');
     } catch (e) {
@@ -137,6 +174,11 @@ class ServiceManager {
       healthStatus['social_service'] = _socialService.isInitialized;
       healthStatus['gamification_service'] = _gamificationService.isInitialized;
       healthStatus['offline_sync_service'] = _offlineSyncService.isInitialized;
+      healthStatus['embedding_service'] = _embeddingService.isInitialized;
+      healthStatus['logging_service'] = _loggingService.isInitialized;
+      healthStatus['payment_service'] = _paymentService.isInitialized;
+      healthStatus['partnership_service'] = _partnershipService.isInitialized;
+      healthStatus['feedback_service'] = _feedbackService.isInitialized;
     } catch (e) {
       print('Health check failed: $e');
       healthStatus['overall'] = false;
@@ -151,7 +193,7 @@ class ServiceManager {
     final health = await healthCheck();
     final status = <String, dynamic>{
       'health': health,
-      'services_count': 11,
+      'services_count': 16,
       'healthy_services': health.values.where((status) => status).length,
       'timestamp': DateTime.now().toIso8601String(),
     };

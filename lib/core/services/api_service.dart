@@ -30,28 +30,51 @@ class ApiService {
   }
 
   void _setupInterceptors() {
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          // Add authentication token if available
-          final token = await _getAuthToken();
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-          handler.next(options);
-        },
-        onResponse: (response, handler) {
-          handler.next(response);
-        },
-        onError: (error, handler) async {
-          if (error.response?.statusCode == 401) {
-            // Handle token expiration
-            await _handleTokenExpiration();
-          }
-          handler.next(error);
-        },
-      ),
-    );
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        // Add authentication token if available
+        final token = await _getAuthToken();
+        if (token != null) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+        handler.next(options);
+      },
+      onResponse: (response, handler) {
+        handler.next(response);
+      },
+      onError: (error, handler) async {
+        if (error.response?.statusCode == 401) {
+          // Handle token expiration
+          await _handleTokenExpiration();
+        }
+        handler.next(error);
+      },
+    ));
+
+    // Retry with exponential backoff for transient errors
+    _dio.interceptors.add(InterceptorsWrapper(onError: (e, handler) async {
+      const maxRetries = 3;
+      int attempt = (e.requestOptions.extra['attempt'] as int?) ?? 0;
+      final isTimeout = e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.sendTimeout;
+      final status = e.response?.statusCode ?? 0;
+      final isRetriableStatus = status == 502 || status == 503 || status == 504;
+      if (attempt < maxRetries && (isTimeout || isRetriableStatus)) {
+        attempt += 1;
+        final delayMs = (200 * (1 << (attempt - 1))).clamp(200, 5000);
+        await Future.delayed(Duration(milliseconds: delayMs));
+        final opts = e.requestOptions;
+        opts.extra = Map<String, dynamic>.from(opts.extra)..['attempt'] = attempt;
+        try {
+          final response = await _dio.fetch(opts);
+          return handler.resolve(response);
+        } catch (err) {
+          return handler.next(err as DioException);
+        }
+      }
+      return handler.next(e);
+    }));
   }
 
   Future<String?> _getAuthToken() async {

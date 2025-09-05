@@ -633,7 +633,7 @@ class _HeritageDashboardState extends State<HeritageDashboard> {
         Navigator.pushNamed(context, '/authentication-screen');
         break;
       case 4:
-        Navigator.pushNamed(context, '/memory-wall');
+        BusinessNavigationHelper.showBusinessFeatures(context);
         break;
     }
   }

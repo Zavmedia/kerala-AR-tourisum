@@ -95,14 +95,42 @@ class ARService {
         await Geolocator.requestPermission();
       }
 
+      // Throttled + smoothed updates
+      Position? last;
+      DateTime lastSent = DateTime.fromMillisecondsSinceEpoch(0);
+      const minInterval = Duration(milliseconds: 750);
+
       _positionSubscription = Geolocator.getPositionStream(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
           distanceFilter: 10,
         ),
       ).listen((position) {
-        _currentPosition = position;
-        _updateARLocation(position);
+        // Exponential moving average smoothing
+        if (last == null) {
+          last = position;
+        } else {
+          final alpha = 0.3;
+          last = Position(
+            longitude: last!.longitude + alpha * (position.longitude - last!.longitude),
+            latitude: last!.latitude + alpha * (position.latitude - last!.latitude),
+            timestamp: position.timestamp,
+            accuracy: position.accuracy,
+            altitude: last!.altitude + alpha * (position.altitude - last!.altitude),
+            altitudeAccuracy: position.altitudeAccuracy,
+            heading: position.heading,
+            headingAccuracy: position.headingAccuracy,
+            speed: position.speed,
+            speedAccuracy: position.speedAccuracy,
+          );
+        }
+
+        // Throttle sends
+        final now = DateTime.now();
+        if (now.difference(lastSent) < minInterval) return;
+        lastSent = now;
+        _currentPosition = last;
+        _updateARLocation(last!);
       });
     } catch (e) {
       print('Location tracking failed: $e');

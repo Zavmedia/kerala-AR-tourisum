@@ -25,6 +25,9 @@ export 'package:universal_html/html.dart';
 // Routes
 export '../routes/app_routes.dart';
 
+// Utils
+export 'utils/business_navigation_helper.dart';
+
 // Widgets
 export '../widgets/custom_icon_widget.dart';
 export '../widgets/custom_image_widget.dart';
@@ -36,6 +39,9 @@ export '../theme/app_theme.dart';
 export 'models/user_model.dart';
 export 'models/heritage_site_model.dart';
 export 'models/memory_model.dart';
+export 'models/payment_models.dart';
+export 'models/partnership_models.dart';
+export 'models/feedback_models.dart';
 
 // Services
 export 'services/api_service.dart';
@@ -50,3 +56,25 @@ export 'services/advanced_search_service.dart';
 export 'services/social_service.dart';
 export 'services/gamification_service.dart';
 export 'services/offline_sync_service.dart';
+export 'services/embedding_service.dart';
+export 'services/logging_service.dart';
+
+// Business Services
+export 'services/payment_service.dart';
+export 'services/partnership_service.dart';
+export 'services/feedback_service.dart';
+
+// Presentation
+export 'presentation/ar_camera_experience/ar_camera_experience.dart';
+export 'presentation/authentication_screen/authentication_screen.dart';
+export 'presentation/heritage_dashboard/heritage_dashboard.dart';
+export 'presentation/memory_wall/memory_wall.dart';
+export 'presentation/onboarding_flow/onboarding_flow.dart';
+export 'presentation/trip_planning_assistant/trip_planning_assistant.dart';
+
+// Business Presentation
+export 'presentation/checkout/checkout_screen.dart';
+export 'presentation/discover/discover_screen.dart';
+export 'presentation/guide_booking/guide_booking_screen.dart';
+export 'presentation/feedback/feedback_screen.dart';
+export 'presentation/business_demo/business_demo_screen.dart';

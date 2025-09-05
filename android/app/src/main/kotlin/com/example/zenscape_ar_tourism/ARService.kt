@@ -23,11 +23,17 @@ class ARService(private val context: Context) : MethodCallHandler {
             "startARSession" -> {
                 startARSession(result)
             }
+            "placeModelAt" -> {
+                placeModelAt(call, result)
+            }
             "stopARSession" -> {
                 stopARSession(result)
             }
             "loadARModel" -> {
                 loadARModel(call, result)
+            }
+            "loadLocalModel" -> {
+                loadLocalModel(call, result)
             }
             "unloadARModel" -> {
                 unloadARModel(call, result)
@@ -40,6 +46,9 @@ class ARService(private val context: Context) : MethodCallHandler {
             }
             "updateLocation" -> {
                 updateLocation(call, result)
+            }
+            "disposeAR" -> {
+                disposeAR(result)
             }
             "getARCapabilities" -> {
                 getARCapabilities(result)
@@ -95,6 +104,22 @@ class ARService(private val context: Context) : MethodCallHandler {
         }
     }
 
+    private fun loadLocalModel(call: MethodCall, result: Result) {
+        val modelId = call.argument<String>("modelId")
+        val assetPath = call.argument<String>("assetPath")
+        val scale = call.argument<Double>("scale") ?: 1.0
+        val position = call.argument<List<Double>>("position") ?: listOf(0.0, 0.0, -1.0)
+        val rotation = call.argument<List<Double>>("rotation") ?: listOf(0.0, 0.0, 0.0)
+        val isInteractive = call.argument<Boolean>("isInteractive") ?: true
+
+        try {
+            // TODO: Implement Sceneform/Filament-based local model loading from assets
+            result.success(true)
+        } catch (e: Exception) {
+            result.error("AR_MODEL_ERROR", "Failed to load local AR model: ${e.message}", null)
+        }
+    }
+
     private fun unloadARModel(call: MethodCall, result: Result) {
         val modelId = call.argument<String>("modelId")
         
@@ -138,6 +163,31 @@ class ARService(private val context: Context) : MethodCallHandler {
             result.success(true)
         } catch (e: Exception) {
             result.error("AR_LOCATION_ERROR", "Failed to update location: ${e.message}", null)
+        }
+    }
+
+    private fun placeModelAt(call: MethodCall, result: Result) {
+        val modelId = call.argument<String>("modelId")
+        val position = call.argument<List<Double>>("position") ?: listOf(0.0, 0.0, -1.0)
+        val rotation = call.argument<List<Double>>("rotation") ?: listOf(0.0, 0.0, 0.0)
+        val scale = call.argument<Double>("scale")
+
+        try {
+            // TODO: Implement anchor creation and node placement with transforms
+            result.success(true)
+        } catch (e: Exception) {
+            result.error("AR_PLACE_ERROR", "Failed to place model: ${e.message}", null)
+        }
+    }
+
+    private fun disposeAR(result: Result) {
+        try {
+            // TODO: Clean up AR session and resources
+            isInitialized = false
+            isTracking = false
+            result.success(null)
+        } catch (e: Exception) {
+            result.error("AR_DISPOSE_ERROR", "Failed to dispose AR: ${e.message}", null)
         }
     }
 

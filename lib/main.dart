@@ -5,16 +5,22 @@ import 'package:sizer/sizer.dart';
 import '../core/app_export.dart';
 import '../widgets/custom_error_widget.dart';
 import '../core/services/service_manager.dart';
+import 'dart:async';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize services
-  try {
-    await ServiceManager.instance.initialize();
-  } catch (e) {
-    print('Service initialization failed: $e');
-  }
+  // Initialize services with guarded zone for global error capture
+  await runZonedGuarded(() async {
+    try {
+      await ServiceManager.instance.initialize();
+      // Start periodic memory monitoring
+      ServiceManager.instance.loggingService.startMemoryMonitoring(
+        interval: const Duration(minutes: 1),
+      );
+    } catch (e, st) {
+      ServiceManager.instance.loggingService.logError(e, st, context: 'Service init');
+    }
 
   bool _hasShownError = false;
 
@@ -35,11 +41,23 @@ void main() async {
     return SizedBox.shrink();
   };
 
-  // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
-  Future.wait([
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
-  ]).then((value) {
-    runApp(MyApp());
+    // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
+    Future.wait([
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+    ]).then((value) {
+      runApp(MyApp());
+    });
+  }, (error, stack) {
+    // Global error handler
+    try {
+      ServiceManager.instance.loggingService.logError(error, stack);
+    } catch (_) {
+      // Fallback console if logging service not ready
+      // ignore: avoid_print
+      print('Uncaught: $error');
+      // ignore: avoid_print
+      print(stack);
+    }
   });
 }
 
